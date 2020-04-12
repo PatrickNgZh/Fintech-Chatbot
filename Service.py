@@ -78,7 +78,7 @@ def callback():
 # Handler function for Text Message
 def handle_TextMessage(event):
     print(event.message.text)
-    msg = 'You said: "' + event.message.text + '" '
+    msg = 'You said: "' + event.message.text + '" '+'...........'
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(msg)
