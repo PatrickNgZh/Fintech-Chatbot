@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import os
 import sys
-import redis
-
 from argparse import ArgumentParser
 
 from flask import Flask, request, abort
@@ -13,12 +11,10 @@ from linebot import (
 from linebot.exceptions import (
     InvalidSignatureError
 )
-
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
-    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackAction, MessageAction
+    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackTemplateAction
 )
-from linebot.utils import PY3
 
 app = Flask(__name__)
 
@@ -87,12 +83,12 @@ def handle_TextMessage(event):
         template=ConfirmTemplate(
             text='Are you sure?',
             actions=[
-                PostbackAction(
+                PostbackTemplateAction(
                     label='Yes',
                     display_text='postback text',
                     data='action=buy&itemid=1'
                 ),
-                PostbackAction(
+                PostbackTemplateAction(
                     label='No',
                     display_text='postback text',
                     data='action=buy&itemid=1'
