@@ -102,6 +102,11 @@ def handle_TextMessage(event):
     )
 
 
+def handle_PostbackEvent(event):
+    msg = TextSendMessage("press")
+    line_bot_api.reply_message(event.reply_token, msg)
+
+
 # Handler function for Sticker Message
 def handle_StickerMessage(event):
     line_bot_api.reply_message(
