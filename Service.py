@@ -76,6 +76,9 @@ def callback():
 
     return 'OK'
 
+def handle_PostbackEvent(event):
+    msg = TextSendMessage('press')
+    line_bot_api.reply_message(event.reply_token, msg)
 
 # Handler function for Text Message
 def handle_TextMessage(event):
@@ -85,13 +88,14 @@ def handle_TextMessage(event):
             text='Are you sure?',
             actions=[
                 PostbackAction(
-                    label='postback',
+                    label='Yes',
                     display_text='postback text',
                     data='action=buy&itemid=1'
                 ),
-                MessageAction(
-                    label='message',
-                    text='message text'
+                PostbackAction(
+                    label='No',
+                    display_text='postback text',
+                    data='action=buy&itemid=1'
                 )
             ]
         )
@@ -100,11 +104,6 @@ def handle_TextMessage(event):
         event.reply_token,
         msg
     )
-
-
-def handle_PostbackEvent(event):
-    msg = TextSendMessage("press")
-    line_bot_api.reply_message(event.reply_token, msg)
 
 
 # Handler function for Sticker Message
