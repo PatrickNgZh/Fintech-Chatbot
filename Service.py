@@ -15,7 +15,8 @@ from linebot.exceptions import (
 )
 
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage, StickerSendMessage
+    MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
+    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackAction, MessageAction
 )
 from linebot.utils import PY3
 
@@ -75,14 +76,31 @@ def callback():
 
     return 'OK'
 
+
 # Handler function for Text Message
 def handle_TextMessage(event):
-    print(event.message.text)
-    msg = 'You said: "' + event.message.text + '" '+'...........'
+    msg = TemplateSendMessage(
+        alt_text='Confirm template',
+        template=ConfirmTemplate(
+            text='Are you sure?',
+            actions=[
+                PostbackAction(
+                    label='postback',
+                    display_text='postback text',
+                    data='action=buy&itemid=1'
+                ),
+                MessageAction(
+                    label='message',
+                    text='message text'
+                )
+            ]
+        )
+    )
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(msg)
+        msg
     )
+
 
 # Handler function for Sticker Message
 def handle_StickerMessage(event):
@@ -93,26 +111,30 @@ def handle_StickerMessage(event):
             sticker_id=event.message.sticker_id)
     )
 
+
 # Handler function for Image Message
 def handle_ImageMessage(event):
     line_bot_api.reply_message(
-	event.reply_token,
-	TextSendMessage(text="Nice image!")
+        event.reply_token,
+        TextSendMessage(text="Nice image!")
     )
+
 
 # Handler function for Video Message
 def handle_VideoMessage(event):
     line_bot_api.reply_message(
-	event.reply_token,
-	TextSendMessage(text="Nice video!")
+        event.reply_token,
+        TextSendMessage(text="Nice video!")
     )
+
 
 # Handler function for File Message
 def handle_FileMessage(event):
     line_bot_api.reply_message(
-	event.reply_token,
-	TextSendMessage(text="Nice file!")
+        event.reply_token,
+        TextSendMessage(text="Nice file!")
     )
+
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser(
