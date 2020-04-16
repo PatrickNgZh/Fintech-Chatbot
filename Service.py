@@ -13,7 +13,7 @@ from linebot.exceptions import (
 )
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
-    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackTemplateAction
+    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction
 )
 
 app = Flask(__name__)
@@ -56,6 +56,8 @@ def callback():
             continue
         if isinstance(event.message, TextMessage):
             handle_TextMessage(event)
+        if isinstance(event, PostbackEvent):
+            handle_PostbackEvent(event)
         if isinstance(event.message, ImageMessage):
             handle_ImageMessage(event)
         if isinstance(event.message, VideoMessage):
@@ -83,16 +85,16 @@ def handle_TextMessage(event):
         template=ConfirmTemplate(
             text='Are you sure?',
             actions=[
-                PostbackTemplateAction(
+                PostbackAction(
                     label='Yes',
-                    display_text='postback text',
-                    data='action=buy&itemid=1'
+                    display_text='postback text2',
+                    data='action=buy&itemid=2'
                 ),
-                PostbackTemplateAction(
+                PostbackAction(
                     label='No',
-                    display_text='postback text',
-                    data='action=buy&itemid=1'
-                )
+                    display_text='postback text2',
+                    data='action=buy&itemid=2'
+                ),
             ]
         )
     )
