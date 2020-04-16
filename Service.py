@@ -52,12 +52,12 @@ def callback():
 
     # if event is MessageEvent and message is TextMessage, then echo text
     for event in events:
-        if not isinstance(event, MessageEvent):
-            continue
         if isinstance(event.message, TextMessage):
             handle_TextMessage(event)
         if isinstance(event, PostbackEvent):
             handle_PostbackEvent(event)
+        if not isinstance(event, MessageEvent):
+            continue
         if isinstance(event.message, ImageMessage):
             handle_ImageMessage(event)
         if isinstance(event.message, VideoMessage):
@@ -66,7 +66,6 @@ def callback():
             handle_FileMessage(event)
         if isinstance(event.message, StickerMessage):
             handle_StickerMessage(event)
-
         if not isinstance(event, MessageEvent):
             continue
         if not isinstance(event.message, TextMessage):
