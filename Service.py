@@ -101,6 +101,7 @@ def handle_TextMessage(event):
         event.reply_token,
         msg
     )
+    line_bot_api.reply_message(event.reply_token,TextSendMessage('hello'))
 
 
 # Handler function for Sticker Message
