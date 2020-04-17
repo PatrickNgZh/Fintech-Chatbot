@@ -13,7 +13,7 @@ from linebot.exceptions import (
 )
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
-    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction
+    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction, ButtonsTemplate
 )
 
 app = Flask(__name__)
@@ -75,31 +75,35 @@ def callback():
 
 
 def handle_PostbackEvent(event):
-    msg = TextSendMessage('press')
+    if event.postback.data == "term":
+        msg = TextSendMessage('agree')
+    else:
+        msg = TextSendMessage('press')
     line_bot_api.reply_message(event.reply_token, msg)
 
 
 # Handler function for Text Message
 def handle_TextMessage(event):
     msg = TemplateSendMessage(
-        alt_text='Confirm template',
-        template=ConfirmTemplate(
-            text='Are you sure?',
+        alt_text='Buttons template',
+        template=ButtonsTemplate(
+            thumbnail_image_url='https://i.ibb.co/19VCgvr/Screenshot-2020-04-17-at-6-25-25-PM.png',
+            title='Menu',
+            text='Please select',
             actions=[
                 PostbackAction(
-                    label='Yes',
-                    display_text='postback text2',
-                    data='action=buy&itemid=2'
+                    label='term',
+                    display_text='term',
+                    data='action=term'
                 ),
                 PostbackAction(
-                    label='No',
-                    display_text='postback text2',
-                    data='action=buy&itemid=2'
-                ),
+                    label='Agree',
+                    display_text='Agree',
+                    data='action=agree'
+                )
             ]
         )
     )
-    line_bot_api.reply_message(event.reply_token, TextSendMessage('hello'))
     line_bot_api.reply_message(
         event.reply_token,
         msg
