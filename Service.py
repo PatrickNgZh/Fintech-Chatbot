@@ -87,19 +87,19 @@ def handle_TextMessage(event):
     msg = TemplateSendMessage(
         alt_text='Buttons template',
         template=ButtonsTemplate(
-            thumbnail_image_url='https://i.ibb.co/19VCgvr/Screenshot-2020-04-17-at-6-25-25-PM.png',
+            thumbnail_image_url='https://i.ibb.co/2y8cJR2/Screenshot-2020-04-17-at-6-45-08-PM.png',
             title='Menu',
             text='Please select',
             actions=[
                 PostbackAction(
                     label='term',
                     display_text='term',
-                    data='action=term'
+                    data='term'
                 ),
                 PostbackAction(
                     label='Agree',
                     display_text='Agree',
-                    data='action=agree'
+                    data='agree'
                 )
             ]
         )
