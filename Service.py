@@ -73,9 +73,11 @@ def callback():
 
     return 'OK'
 
+
 def handle_PostbackEvent(event):
     msg = TextSendMessage('press')
     line_bot_api.reply_message(event.reply_token, msg)
+
 
 # Handler function for Text Message
 def handle_TextMessage(event):
@@ -101,7 +103,7 @@ def handle_TextMessage(event):
         event.reply_token,
         msg
     )
-    line_bot_api.reply_message(event.reply_token,TextSendMessage('hello'))
+    # line_bot_api.reply_message(event.reply_token, TextSendMessage('hello'))
 
 
 # Handler function for Sticker Message
