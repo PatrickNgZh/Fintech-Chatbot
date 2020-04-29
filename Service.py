@@ -13,7 +13,7 @@ from linebot.exceptions import (
 )
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
-    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction
+    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction, ButtonsTemplate
 )
 
 app = Flask(__name__)
@@ -34,7 +34,8 @@ if channel_access_token is None:
 
 line_bot_api = LineBotApi(channel_access_token)
 parser = WebhookParser(channel_secret)
-
+# AMAP_API_KEY
+AMAP_API_KEY = 'b5b581b926e1a908f35f09094bcf413c'
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -66,6 +67,9 @@ def callback():
             handle_FileMessage(event)
         if isinstance(event.message, StickerMessage):
             handle_StickerMessage(event)
+        if isinstance(event.message, LocationMessage):
+            handle_LocationMessage(event)
+
         if not isinstance(event, MessageEvent):
             continue
         if not isinstance(event.message, TextMessage):
@@ -75,27 +79,32 @@ def callback():
 
 
 def handle_PostbackEvent(event):
-    msg = TextSendMessage('press')
+    if event.postback.data == "term":
+        msg = TextSendMessage('agree')
+    else:
+        msg = TextSendMessage('press')
     line_bot_api.reply_message(event.reply_token, msg)
 
 
 # Handler function for Text Message
 def handle_TextMessage(event):
     msg = TemplateSendMessage(
-        alt_text='Confirm template',
-        template=ConfirmTemplate(
-            text='Are you sure?',
+        alt_text='Buttons template',
+        template=ButtonsTemplate(
+            thumbnail_image_url='https://i.ibb.co/2y8cJR2/Screenshot-2020-04-17-at-6-45-08-PM.png',
+            title='Menu',
+            text='Please select',
             actions=[
                 PostbackAction(
-                    label='Yes',
-                    display_text='postback text2',
-                    data='action=buy&itemid=2'
+                    label='term',
+                    display_text='term',
+                    data='term'
                 ),
                 PostbackAction(
-                    label='No',
-                    display_text='postback text2',
-                    data='action=buy&itemid=2'
-                ),
+                    label='Agree',
+                    display_text='Agree',
+                    data='agree'
+                )
             ]
         )
     )
@@ -103,8 +112,78 @@ def handle_TextMessage(event):
         event.reply_token,
         msg
     )
-    # line_bot_api.reply_message(event.reply_token, TextSendMessage('hello'))
 
+
+
+# Handler function for Location Message
+def handle_LocationMessage(event):
+
+    location = f'{event.message.longitude},{event.message.latitude}'
+
+    addurl2 = 'https://restapi.amap.com/v3/place/around?key={}&location={}&radius=10000&types=030000&extensions=base&offset=3'.format(
+        AMAP_API_KEY, location)
+    addressReq = requests.get(addurl2)
+    addressDoc = addressReq.json()
+    sugName0 = addressDoc['pois'][0]['name']
+    sugAddress0 = addressDoc['pois'][0]['address']
+    sugLocation0 = addressDoc['pois'][0]['location']
+    sugName1 = addressDoc['pois'][1]['name']
+    sugAddress1 = addressDoc['pois'][1]['address']
+    sugLocation1 = addressDoc['pois'][0]['location']
+    sugName2 = addressDoc['pois'][2]['name']
+    sugAddress2 = addressDoc['pois'][2]['address']
+    sugLocation2 = addressDoc['pois'][0]['location']
+
+    sugtel0 = addressDoc['pois'][0]['tel']
+    sugtel1 = addressDoc['pois'][0]['tel']
+    sugtel2 = addressDoc['pois'][0]['tel']
+
+    #msg = f'为您找到最近的的三家汽车维修店及地址：\n 1. {sugName0}  {sugAddress0}\n 2. {sugName1}  {sugAddress1}\n 3. {sugName2}  {sugAddress2}'
+
+
+    Carousel_template = TemplateSendMessage(
+        alt_text='Carousel template',
+        template=CarouselTemplate(
+            columns=[
+                CarouselColumn(
+
+                    thumbnail_image_url='https://img.51miz.com/preview/element/00/01/08/29/E-1082937-04831968.jpg',
+                    title=f'{sugName0}',
+                    text='Address: ' + sugAddress0,
+                    actions=[
+                        URITemplateAction(
+                            label=f'Telephone:{sugtel0}',
+                            uri=f'tel:{sugtel0}'
+                        )
+                    ]
+                ),
+                CarouselColumn(
+                    thumbnail_image_url='https://img.51miz.com/preview/element/00/01/08/29/E-1082937-04831968.jpg',
+                    title=f'{sugName1}',
+                    text='Address: ' + sugAddress1,
+                    actions=[
+                        URITemplateAction(
+                            label=f'Telephone:{sugtel1}',
+                            uri=f'tel:{sugtel1}'
+                        )
+                    ]
+                ),
+                CarouselColumn(
+                    thumbnail_image_url='https://img.51miz.com/preview/element/00/01/08/29/E-1082937-04831968.jpg',
+                    title=f'{sugName2}',
+                    text='Address: ' + sugAddress2,
+                    actions=[
+                        URITemplateAction(
+                            label=f'Telephone:{sugtel2}',
+                            uri=f'tel:{sugtel2}'
+                        )
+                    ]
+                )
+
+            ]
+        )
+    )
+    line_bot_api.reply_message(event.reply_token, Carousel_template)
 
 # Handler function for Sticker Message
 def handle_StickerMessage(event):
