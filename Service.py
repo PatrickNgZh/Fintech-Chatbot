@@ -34,7 +34,8 @@ if channel_access_token is None:
 
 line_bot_api = LineBotApi(channel_access_token)
 parser = WebhookParser(channel_secret)
-
+# AMAP_API_KEY
+AMAP_API_KEY = 'b5b581b926e1a908f35f09094bcf413c'
 
 @app.route("/callback", methods=['POST'])
 def callback():
