@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 import os
 import sys
 from argparse import ArgumentParser
+from datetime import datetime
 
+import requests
 from flask import Flask, request, abort
 from linebot import (
     LineBotApi, WebhookParser
@@ -13,14 +15,22 @@ from linebot.exceptions import (
 )
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
-    StickerSendMessage, TemplateSendMessage, ConfirmTemplate, PostbackEvent, PostbackAction, ButtonsTemplate
+    StickerSendMessage, TemplateSendMessage, PostbackEvent, PostbackAction, ButtonsTemplate,
+    CarouselTemplate, CarouselColumn, LocationMessage, URITemplateAction, FlexSendMessage
 )
+
+from Record import Record
+from User import User
+from database.DatabaseManager import DatabaseManager
+from database.ImageUtil import ImageUtil
 
 app = Flask(__name__)
 
 # get channel_secret and channel_access_token from your environment variable
-channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
-channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
+# channel_secret = os.getenv('LINE_CHANNEL_SECRET', None)
+# channel_access_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
+channel_secret = '11ea65827bee73807f09630d71bfc0d5'
+channel_access_token = 'bsqUPTQgthfNaPT5KV+2GE2ZgnptBAJd+1a3/aFjGPRL00qaBOSDnxaJQ7XxMphHiXe0Z1NHHGCk5NzJi+mdHhjUTOnTGuaVzpP/T0PCtOqi3VMV08455B5Ze/rxXmgNRxs+kUwITwd5xhQsFYyWzgdB04t89/1O/w1cDnyilFU='
 
 # obtain the port that heroku assigned to this app.
 heroku_port = os.getenv('PORT', None)
@@ -36,6 +46,9 @@ line_bot_api = LineBotApi(channel_access_token)
 parser = WebhookParser(channel_secret)
 # AMAP_API_KEY
 AMAP_API_KEY = 'b5b581b926e1a908f35f09094bcf413c'
+
+record = ''
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -55,8 +68,10 @@ def callback():
     for event in events:
         if isinstance(event, PostbackEvent):
             handle_PostbackEvent(event)
+            continue
         if isinstance(event.message, TextMessage):
             handle_TextMessage(event)
+            continue
         if not isinstance(event, MessageEvent):
             continue
         if isinstance(event.message, ImageMessage):
@@ -79,45 +94,247 @@ def callback():
 
 
 def handle_PostbackEvent(event):
-    if event.postback.data == "term":
-        msg = TextSendMessage('agree')
+    if event.postback.data == "terms":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='''Personal Information Collection Statement
+
+The Insurance Company respects your privacy and is committed to protecting it through the adoption of this personal information collection statement (“Personal Information Collection Statement”). It guides and governs how we collect, store, transfer, process and use the Personal Data (as defined hereinafter) collected about you. Please read this carefully to understand our policies and practices as set out in this Personal Information Collection Statement regarding your Personal Data and how we will treat it (the “Policy”). If you do not agree with our Policy, do not enter your Personal Data or register to receive communication from us. This Policy may, in our sole discretion, be updated, modified, and changed from time to time. Your continued use of the Website after we make such updates, modifications, and changes is deemed to be acceptance of such, so please check the Policy periodically for updates.
+
+In this document, “we”, “our”, or “us” refers to The Insurance Company.'''))
     else:
-        msg = TextSendMessage('press')
-    line_bot_api.reply_message(event.reply_token, msg)
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please enter the insurance ID'))
 
 
 # Handler function for Text Message
 def handle_TextMessage(event):
-    msg = TemplateSendMessage(
-        alt_text='Buttons template',
-        template=ButtonsTemplate(
-            thumbnail_image_url='https://i.ibb.co/2y8cJR2/Screenshot-2020-04-17-at-6-45-08-PM.png',
-            title='Menu',
-            text='Please select',
-            actions=[
-                PostbackAction(
-                    label='term',
-                    display_text='term',
-                    data='term'
-                ),
-                PostbackAction(
-                    label='Agree',
-                    display_text='Agree',
-                    data='agree'
-                )
-            ]
+    if event.message.text.startswith('#'):
+        flag = DatabaseManager().verify_insurance(event.source.user_id, event.message.text)
+        if flag:
+            line_bot_api.push_message(event.source.user_id,
+                                      TextSendMessage(text='Please choose the type of Insurance Claims.'))
+            global record
+            record.insurance_id = event.message.text
+        else:
+            line_bot_api.push_message(event.source.user_id,
+                                      TextSendMessage(text="Sorry, this insurance ID doesn't exist"))
+    elif event.message.text == 'status':
+        temp = DatabaseManager().find_record(event.source.user_id)
+        receipt = {
+            "type": "bubble",
+            "hero": {
+                "type": "image",
+                "url": temp.image,
+                "size": "full",
+                "aspectRatio": "20:13",
+                "aspectMode": "cover",
+                "action": {
+                    "type": "uri",
+                    "uri": "http://linecorp.com/"
+                }
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "INSURANCE CLAIMS RECORD",
+                        "wrap": True,
+                        "weight": "bold",
+                        "gravity": "center",
+                        "size": "xl"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "baseline",
+                        "margin": "md",
+                        "contents": [
+                            {
+                                "type": "icon",
+                                "size": "sm",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+                            },
+                            {
+                                "type": "icon",
+                                "size": "sm",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+                            },
+                            {
+                                "type": "icon",
+                                "size": "sm",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+                            },
+                            {
+                                "type": "icon",
+                                "size": "sm",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+                            },
+                            {
+                                "type": "icon",
+                                "size": "sm",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gray_star_28.png"
+                            },
+                            {
+                                "type": "text",
+                                "text": "4.0",
+                                "size": "sm",
+                                "color": "#999999",
+                                "margin": "md",
+                                "flex": 0
+                            }
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "lg",
+                        "spacing": "sm",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "ID",
+                                        "color": "#aaaaaa",
+                                        "size": "sm",
+                                        "flex": 1
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": temp.insurance_id,
+                                        "wrap": True,
+                                        "size": "sm",
+                                        "color": "#666666",
+                                        "flex": 4
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "Place",
+                                        "color": "#aaaaaa",
+                                        "size": "sm",
+                                        "flex": 1
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": temp.location,
+                                        "wrap": True,
+                                        "color": "#666666",
+                                        "size": "sm",
+                                        "flex": 4
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "baseline",
+                                "spacing": "sm",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "Time",
+                                        "color": "#aaaaaa",
+                                        "size": "sm",
+                                        "flex": 1
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": str(temp.create_time),
+                                        "wrap": True,
+                                        "color": "#666666",
+                                        "size": "sm",
+                                        "flex": 4
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "xxl",
+                        "contents": [
+                            {
+                                "type": "spacer"
+                            },
+                            {
+                                "type": "image",
+                                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/linecorp_code_withborder.png",
+                                "aspectMode": "cover",
+                                "size": "xl"
+                            },
+                            {
+                                "type": "text",
+                                "text": "You can check the insurance claims by using this code",
+                                "color": "#aaaaaa",
+                                "wrap": True,
+                                "margin": "xxl",
+                                "size": "xs"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        flex_message = FlexSendMessage(
+            alt_text='hello',
+            contents=receipt
         )
-    )
-    line_bot_api.reply_message(
-        event.reply_token,
-        msg
-    )
-
+        line_bot_api.reply_message(
+            event.reply_token,
+            flex_message
+        )
+    else:
+        profile = line_bot_api.get_profile(event.source.user_id)
+        user_record = DatabaseManager().find_user(event.source.user_id)
+        if not user_record:
+            user = User()
+            user.id = event.source.user_id
+            user.avatar = profile.picture_url
+            user.name = profile.display_name
+            DatabaseManager().save_user(user)
+        create_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        record = Record()
+        record.user_id = event.source.user_id
+        record.create_time = create_time
+        msg = TemplateSendMessage(
+            alt_text='Buttons template',
+            template=ButtonsTemplate(
+                thumbnail_image_url=profile.picture_url,
+                title='Terms of Service',
+                text='Please read the Terms of Service first.',
+                actions=[
+                    PostbackAction(
+                        label='Terms of Service',
+                        display_text='Terms of Service',
+                        data='terms'
+                    ),
+                    PostbackAction(
+                        label='Agree',
+                        display_text='Agree',
+                        data='agree'
+                    )
+                ]
+            )
+        )
+        line_bot_api.reply_message(
+            event.reply_token,
+            msg
+        )
 
 
 # Handler function for Location Message
 def handle_LocationMessage(event):
-
+    record.location = event.message.address
     location = f'{event.message.longitude},{event.message.latitude}'
 
     addurl2 = 'https://restapi.amap.com/v3/place/around?key={}&location={}&radius=10000&types=030000&extensions=base&offset=3'.format(
@@ -138,8 +355,7 @@ def handle_LocationMessage(event):
     sugtel1 = addressDoc['pois'][0]['tel']
     sugtel2 = addressDoc['pois'][0]['tel']
 
-    #msg = f'为您找到最近的的三家汽车维修店及地址：\n 1. {sugName0}  {sugAddress0}\n 2. {sugName1}  {sugAddress1}\n 3. {sugName2}  {sugAddress2}'
-
+    # msg = f'为您找到最近的的三家汽车维修店及地址：\n 1. {sugName0}  {sugAddress0}\n 2. {sugName1}  {sugAddress1}\n 3. {sugName2}  {sugAddress2}'
 
     Carousel_template = TemplateSendMessage(
         alt_text='Carousel template',
@@ -185,6 +401,7 @@ def handle_LocationMessage(event):
     )
     line_bot_api.reply_message(event.reply_token, Carousel_template)
 
+
 # Handler function for Sticker Message
 def handle_StickerMessage(event):
     line_bot_api.reply_message(
@@ -197,10 +414,14 @@ def handle_StickerMessage(event):
 
 # Handler function for Image Message
 def handle_ImageMessage(event):
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text="Nice image!")
-    )
+    image = line_bot_api.get_message_content(event.message.id)
+    image_url = ImageUtil().upload(image.content)
+    record.image = image_url
+    line_bot_api.push_message(event.source.user_id,
+                              TextSendMessage(text='Success！Insurance Claim is reviewing...'))
+    line_bot_api.push_message(event.source.user_id,
+                              TextSendMessage(text="You can send 'status' to check the status."))
+    DatabaseManager().save_record(record)
 
 
 # Handler function for Video Message

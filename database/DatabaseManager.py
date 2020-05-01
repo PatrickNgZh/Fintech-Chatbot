@@ -5,11 +5,11 @@ from Record import Record
 
 class DatabaseManager:
     def __init__(self):
-        self.host = 'localhost'
+        self.host = 'us-cdbr-iron-east-01.cleardb.net'
         self.port = 3306
-        self.user = 'root'
-        self.password = '123456'
-        self.database = 'db_fintech'
+        self.user = 'b58e28eb5f2a7a'
+        self.password = '1fef11c8'
+        self.database = 'heroku_0faf22c749fbf89'
 
     def verify_insurance(self, user_id, insurance_id):
         connection = pymysql.connect(host=self.host,
@@ -58,3 +58,35 @@ class DatabaseManager:
         record.location = rows[0][2]
         record.create_time = rows[0][3]
         return record
+
+    def find_user(self, user_id):
+        connection = pymysql.connect(host=self.host,
+                                     port=self.port,
+                                     user=self.user,
+                                     password=self.password,
+                                     database=self.database)
+        sql = ("SELECT * FROM tb_users WHERE id = '%s';" % (user_id))
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        if not rows:
+            return False
+        else:
+            return True
+
+    def save_user(self, user):
+        connection = pymysql.connect(host=self.host,
+                                     port=self.port,
+                                     user=self.user,
+                                     password=self.password,
+                                     database=self.database)
+        cursor = connection.cursor()
+        sql = (
+                "INSERT INTO tb_users(id,avatar,name)" + " VALUES ('%s','%s', '%s')" % (
+            user.id, user.avatar, user.name))
+        cursor.execute(sql)
+        connection.commit()
+        cursor.close()
+        connection.close()
