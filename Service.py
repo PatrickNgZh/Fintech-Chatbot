@@ -295,6 +295,12 @@ def handle_TextMessage(event):
         )
     else:
         profile = line_bot_api.get_profile(event.source.user_id)
+        greeting = 'Hi, '
+        greeting = greeting + profile.display_name
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text=greeting))
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text='Welcome to Insurance Claims Chatbot!'))
         user_record = DatabaseManager().find_user(event.source.user_id)
         if not user_record:
             user = User()
