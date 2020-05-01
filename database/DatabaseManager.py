@@ -53,10 +53,10 @@ class DatabaseManager:
         cursor.close()
         connection.close()
         record = Record()
-        record.insurance_id = rows[0][5]
+        record.insurance_id = rows[0][3]
         record.image = rows[0][1]
-        record.location = rows[0][2]
-        record.create_time = rows[0][3]
+        record.location = rows[0][4]
+        record.create_time = rows[0][5]
         return record
 
     def find_user(self, user_id):
