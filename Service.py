@@ -383,6 +383,30 @@ def handle_TextMessage(event):
         record = Record()
         record.user_id = event.source.user_id
         record.create_time = create_time
+        msg = TemplateSendMessage(
+            alt_text='Buttons template',
+            template=ButtonsTemplate(
+                thumbnail_image_url=profile.picture_url,
+                title='Terms of Service',
+                text='Please read the Terms of Service first.',
+                actions=[
+                    PostbackAction(
+                        label='Terms of Service',
+                        display_text='Terms of Service',
+                        data='terms'
+                    ),
+                    PostbackAction(
+                        label='Agree',
+                        display_text='Agree',
+                        data='agree'
+                    )
+                ]
+            )
+        )
+        line_bot_api.reply_message(
+            event.reply_token,
+            msg
+        )
 
 
 # Handler function for Location Message
