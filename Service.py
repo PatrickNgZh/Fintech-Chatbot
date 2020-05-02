@@ -109,6 +109,16 @@ In this document, “we”, “our”, or “us” refers to The Insurance Compa
 
     elif event.postback.data == "slight":
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please send your location to us. And we will recommand 3 nearest car service point to you.'))
+    
+    elif event.postback.data == "check":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We will mail to your reserved address in 7 days'))
+    
+    elif event.postback.data == "e-check":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We will send you electronic check documents in 7 days'))
+    
+    elif event.postback.data == "bank transfer":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please enter your bank accout'))
+    
     else:
         print(1)
 
@@ -324,6 +334,37 @@ def handle_TextMessage(event):
             event.reply_token,
             flex_message
         )
+    
+    elif event.message.text == 'compensation':
+         msg = TemplateSendMessage(
+            alt_text='Buttons template',
+            template=ButtonsTemplate(
+                thumbnail_image_url=profile.picture_url,
+                title='Compensation',
+                text='Please choose compensation way.',
+                actions=[
+                    PostbackAction(
+                        label='check',
+                        display_text='Mail a check',
+                        data='check'
+                    ),
+                    PostbackAction(
+                        label='e-check',
+                        display_text='E-check',
+                        data='e-check'
+                    )
+                    PostbackAction(
+                        label='bank transfer',
+                        display_text='Bank Transfer',
+                        data='bank transfer'
+                    )
+                ]
+            )
+        )
+        line_bot_api.reply_message(
+            event.reply_token,
+            msg
+        )
     else:
         profile = line_bot_api.get_profile(event.source.user_id)
         greeting = 'Hi, '
@@ -343,30 +384,6 @@ def handle_TextMessage(event):
         record = Record()
         record.user_id = event.source.user_id
         record.create_time = create_time
-        msg = TemplateSendMessage(
-            alt_text='Buttons template',
-            template=ButtonsTemplate(
-                thumbnail_image_url=profile.picture_url,
-                title='Terms of Service',
-                text='Please read the Terms of Service first.',
-                actions=[
-                    PostbackAction(
-                        label='Terms of Service',
-                        display_text='Terms of Service',
-                        data='terms'
-                    ),
-                    PostbackAction(
-                        label='Agree',
-                        display_text='Agree',
-                        data='agree'
-                    )
-                ]
-            )
-        )
-        line_bot_api.reply_message(
-            event.reply_token,
-            msg
-        )
 
 
 # Handler function for Location Message
