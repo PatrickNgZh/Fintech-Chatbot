@@ -336,6 +336,7 @@ def handle_TextMessage(event):
         )
     
     elif event.message.text == 'compensation':
+        profile = line_bot_api.get_profile(event.source.user_id)
         msg = TemplateSendMessage(
             alt_text='Buttons template',
             template=ButtonsTemplate(
