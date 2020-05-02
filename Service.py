@@ -16,7 +16,7 @@ from linebot.exceptions import (
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
     StickerSendMessage, TemplateSendMessage, PostbackEvent, PostbackAction, ButtonsTemplate,
-    CarouselTemplate, CarouselColumn, LocationMessage, URITemplateAction, FlexSendMessage
+    CarouselTemplate, CarouselColumn, LocationMessage, URITemplateAction, FlexSendMessage,ConfirmTemplate,
 )
 
 from Record import Record
@@ -100,8 +100,19 @@ def handle_PostbackEvent(event):
 The Insurance Company respects your privacy and is committed to protecting it through the adoption of this personal information collection statement (“Personal Information Collection Statement”). It guides and governs how we collect, store, transfer, process and use the Personal Data (as defined hereinafter) collected about you. Please read this carefully to understand our policies and practices as set out in this Personal Information Collection Statement regarding your Personal Data and how we will treat it (the “Policy”). If you do not agree with our Policy, do not enter your Personal Data or register to receive communication from us. This Policy may, in our sole discretion, be updated, modified, and changed from time to time. Your continued use of the Website after we make such updates, modifications, and changes is deemed to be acceptance of such, so please check the Policy periodically for updates.
 
 In this document, “we”, “our”, or “us” refers to The Insurance Company.'''))
-    else:
+
+    elif event.postback.data == "agree":
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please enter the insurance ID'))
+
+    elif event.postback.data == "serious":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We are now connecting to manual mode...'))
+
+    elif event.postback.data == "slight":
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please send your location to us.'))
+    else:
+        print(1)
+
+
 
 
 # Handler function for Text Message
@@ -109,8 +120,28 @@ def handle_TextMessage(event):
     if event.message.text.startswith('#'):
         flag = DatabaseManager().verify_insurance(event.source.user_id, event.message.text)
         if flag:
-            line_bot_api.push_message(event.source.user_id,
-                                      TextSendMessage(text='Please choose the type of Insurance Claims.'))
+            #line_bot_api.push_message(event.source.user_id,TextSendMessage(text='Please choose the type of Insurance Claims.'))
+            message = TemplateSendMessage(
+                alt_text='Confirm template',
+                template=ConfirmTemplate(
+                    text='Please choose the type of Insurance Claims.',
+                    actions=[
+                        PostbackAction(
+                            label='Slight',
+                            display_text='Slight',
+                            data='slight'
+                        ),
+                        PostbackAction(
+                            label='Serious',
+                            display_text='Serious',
+                            data='serious'
+                        )
+
+                    ]
+                )
+            )
+            line_bot_api.reply_message(event.reply_token, message)
+
             global record
             record.insurance_id = event.message.text
         else:
@@ -349,19 +380,16 @@ def handle_LocationMessage(event):
     addressDoc = addressReq.json()
     sugName0 = addressDoc['pois'][0]['name']
     sugAddress0 = addressDoc['pois'][0]['address']
-    sugLocation0 = addressDoc['pois'][0]['location']
+
     sugName1 = addressDoc['pois'][1]['name']
     sugAddress1 = addressDoc['pois'][1]['address']
-    sugLocation1 = addressDoc['pois'][0]['location']
+
     sugName2 = addressDoc['pois'][2]['name']
     sugAddress2 = addressDoc['pois'][2]['address']
-    sugLocation2 = addressDoc['pois'][0]['location']
 
     sugtel0 = addressDoc['pois'][0]['tel']
     sugtel1 = addressDoc['pois'][0]['tel']
     sugtel2 = addressDoc['pois'][0]['tel']
-
-    # msg = f'为您找到最近的的三家汽车维修店及地址：\n 1. {sugName0}  {sugAddress0}\n 2. {sugName1}  {sugAddress1}\n 3. {sugName2}  {sugAddress2}'
 
     Carousel_template = TemplateSendMessage(
         alt_text='Carousel template',
@@ -396,7 +424,7 @@ def handle_LocationMessage(event):
                     text='Address: ' + sugAddress2,
                     actions=[
                         URITemplateAction(
-                            label=f'Telephone:{sugtel2}',
+                            label=f'Call',
                             uri=f'tel:{sugtel2}'
                         )
                     ]
