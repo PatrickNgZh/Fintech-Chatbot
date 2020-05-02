@@ -352,7 +352,7 @@ def handle_TextMessage(event):
                         label='e-check',
                         display_text='E-check',
                         data='e-check'
-                    )
+                    ),
                     PostbackAction(
                         label='bank transfer',
                         display_text='Bank Transfer',
@@ -365,6 +365,7 @@ def handle_TextMessage(event):
             event.reply_token,
             msg
         )
+
     else:
         profile = line_bot_api.get_profile(event.source.user_id)
         greeting = 'Hi, '
