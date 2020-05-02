@@ -108,7 +108,7 @@ In this document, “we”, “our”, or “us” refers to The Insurance Compa
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We are now connecting to manual mode...'))
 
     elif event.postback.data == "slight":
-        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please send your location to us.'))
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please send your location to us. And we will recommand 3 nearest car service point to you.'))
     else:
         print(1)
 
@@ -402,7 +402,7 @@ def handle_LocationMessage(event):
                     text='Address: ' + sugAddress0,
                     actions=[
                         URITemplateAction(
-                            label=f'Telephone:{sugtel0}',
+                            label=f'Call',
                             uri=f'tel:{sugtel0}'
                         )
                     ]
@@ -413,7 +413,7 @@ def handle_LocationMessage(event):
                     text='Address: ' + sugAddress1,
                     actions=[
                         URITemplateAction(
-                            label=f'Telephone:{sugtel1}',
+                            label=f'Call',
                             uri=f'tel:{sugtel1}'
                         )
                     ]
