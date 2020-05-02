@@ -336,7 +336,7 @@ def handle_TextMessage(event):
         )
     
     elif event.message.text == 'compensation':
-         msg = TemplateSendMessage(
+        msg = TemplateSendMessage(
             alt_text='Buttons template',
             template=ButtonsTemplate(
                 thumbnail_image_url=profile.picture_url,
@@ -361,10 +361,7 @@ def handle_TextMessage(event):
                 ]
             )
         )
-        line_bot_api.reply_message(
-            event.reply_token,
-            msg
-        )
+        line_bot_api.reply_message( event.reply_token, msg)
 
     else:
         profile = line_bot_api.get_profile(event.source.user_id)
