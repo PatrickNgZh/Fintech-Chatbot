@@ -16,7 +16,7 @@ from linebot.exceptions import (
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageMessage, VideoMessage, FileMessage, StickerMessage,
     StickerSendMessage, TemplateSendMessage, PostbackEvent, PostbackAction, ButtonsTemplate,
-    CarouselTemplate, CarouselColumn, LocationMessage, URITemplateAction, FlexSendMessage,ConfirmTemplate,
+    CarouselTemplate, CarouselColumn, LocationMessage, URITemplateAction, FlexSendMessage, ConfirmTemplate,
 )
 
 from Record import Record
@@ -108,17 +108,25 @@ In this document, “we”, “our”, or “us” refers to The Insurance Compa
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We are now connecting to manual mode...'))
 
     elif event.postback.data == "slight":
-        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please send your location to us. And we will recommand 3 nearest car service point to you.'))
-    
+        line_bot_api.push_message(event.source.user_id, TextSendMessage(
+            text='Please send your location to us. And we will recommand 3 nearest car service point to you.'))
+
     elif event.postback.data == "check":
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text='Success！Insurance Claim is reviewing...'))
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We will send you check in 7 days'))
         line_bot_api.push_message(event.source.user_id,
                                   TextSendMessage(text="You can send 'status' to check the status."))
     elif event.postback.data == "e-check":
-        line_bot_api.push_message(event.source.user_id, TextSendMessage(text='We will send you electronic check documents in 7 days'))
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text='Success！Insurance Claim is reviewing...'))
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text='We will send you electronic check documents in 7 days'))
         line_bot_api.push_message(event.source.user_id,
                                   TextSendMessage(text="You can send 'status' to check the status."))
     elif event.postback.data == "bank transfer":
+        line_bot_api.push_message(event.source.user_id,
+                                  TextSendMessage(text='Success！Insurance Claim is reviewing...'))
         line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Please enter your bank accout'))
         line_bot_api.push_message(event.source.user_id,
                                   TextSendMessage(text="You can send 'status' to check the status."))
@@ -126,14 +134,12 @@ In this document, “we”, “our”, or “us” refers to The Insurance Compa
         print(1)
 
 
-
-
 # Handler function for Text Message
 def handle_TextMessage(event):
     if event.message.text.startswith('#'):
         flag = DatabaseManager().verify_insurance(event.source.user_id, event.message.text)
         if flag:
-            #line_bot_api.push_message(event.source.user_id,TextSendMessage(text='Please choose the type of Insurance Claims.'))
+            # line_bot_api.push_message(event.source.user_id,TextSendMessage(text='Please choose the type of Insurance Claims.'))
             message = TemplateSendMessage(
                 alt_text='Confirm template',
                 template=ConfirmTemplate(
@@ -337,7 +343,7 @@ def handle_TextMessage(event):
             event.reply_token,
             flex_message
         )
-    
+
     elif event.message.text == 'compensation':
         profile = line_bot_api.get_profile(event.source.user_id)
         msg = TemplateSendMessage(
@@ -365,7 +371,7 @@ def handle_TextMessage(event):
                 ]
             )
         )
-        line_bot_api.reply_message( event.reply_token, msg)
+        line_bot_api.reply_message(event.reply_token, msg)
 
     else:
         profile = line_bot_api.get_profile(event.source.user_id)
@@ -477,7 +483,8 @@ def handle_LocationMessage(event):
         )
     )
     line_bot_api.reply_message(event.reply_token, Carousel_template)
-    line_bot_api.push_message(event.source.user_id, TextSendMessage(text='Success, please send photos of the accident.'))
+    line_bot_api.push_message(event.source.user_id,
+                              TextSendMessage(text='Success! please send photos of the accident.'))
 
 
 # Handler function for Sticker Message
@@ -495,8 +502,6 @@ def handle_ImageMessage(event):
     image = line_bot_api.get_message_content(event.message.id)
     image_url = ImageUtil().upload(image.content)
     record.image = image_url
-    line_bot_api.push_message(event.source.user_id,
-                              TextSendMessage(text='Success！Insurance Claim is reviewing...'))
     line_bot_api.push_message(event.source.user_id,
                               TextSendMessage(text="You can send 'compensation' to choose the type of compensation."))
     DatabaseManager().save_record(record)
